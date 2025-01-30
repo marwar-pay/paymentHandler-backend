@@ -40,7 +40,7 @@ async function getValidToken(client_id, client_version, client_secret) {
     // } else {
     const newTokenData = await fetchAuthToken(client_id, client_version, client_secret);
     return newTokenData.access_token;
-    // }
+    // } 
 }
 
 function generateAuthorizationHash(username, password) {
