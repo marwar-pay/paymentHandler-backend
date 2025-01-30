@@ -3,9 +3,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import axios from "axios";
 import crypto from "crypto";
 
-const url ='https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token'
-    
-
+const url = 'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token'
+const username = 'your-username';
+const password = 'your-password';
 
 async function fetchAuthToken(client_id, client_version, client_secret) {
     const body = new URLSearchParams({
@@ -38,8 +38,8 @@ async function getValidToken(client_id, client_version, client_secret) {
     // if (tokenData && tokenData.expires_at > currentTime + bufferTime) {
     //     return tokenData.access_token;
     // } else {
-        const newTokenData = await fetchAuthToken(client_id, client_version, client_secret);
-        return newTokenData.access_token;
+    const newTokenData = await fetchAuthToken(client_id, client_version, client_secret);
+    return newTokenData.access_token;
     // }
 }
 
@@ -60,7 +60,7 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
         const accessToken = await getValidToken(client_id, client_version, client_secret);
         const paymentRequest = {
             merchantOrderId,
-            amount: Number(amount), 
+            amount: Number(amount),
             expireAfter: 1200,
             metaInfo: {
                 udf1: ".............",
@@ -100,3 +100,69 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
         });
     }
 });
+
+
+
+export const phonePeCallback = asyncHandler(async (req, res) => {
+    console.log('request recicved')
+    const receivedAuthorization = req.headers['authorization'];
+    // console.log(receivedAuthorization)
+    // const expectedAuthorization = generateAuthorizationHash();
+
+    // if (receivedAuthorization !== `SHA256(${expectedAuthorization})`) {
+    //     return res.status(403).json({ message: 'Unauthorized' });
+    // }
+    const { event, payload } = req.body;
+
+    console.log(payload)
+    console.log(event)
+
+    if (!event || !payload) {
+        return res.status(400).json({ message: 'Invalid request format' });
+    }
+
+    try {
+        switch (event) {
+            case 'checkout.order.completed':
+                handleOrderCompleted(payload);
+                break;
+            case 'checkout.order.failed':
+                handleOrderFailed(payload);
+                break;
+            // case 'pg.refund.accepted':
+            //     handleRefundAccepted(payload);
+            //     break;
+            // case 'pg.refund.completed':
+            //     handleRefundCompleted(payload);
+            //     break;
+            // case 'pg.refund.failed':
+            //     handleRefundFailed(payload);
+            //     break;
+            default:
+                return res.status(400).json({ message: 'Unknown event type' });
+        }
+
+        res.status(200).json({ message: 'Webhook received and processed successfully' });
+    } catch (error) {
+        console.error('Error processing webhook:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+function handleOrderCompleted(payload) {
+    const { orderId, merchantOrderId, state, amount } = payload;
+    if (state === 'COMPLETED') {
+        console.log(`Order ${orderId} completed with amount: ${amount} and Merchant order id ${merchantOrderId}`);
+    } else {
+        console.log(`Order ${orderId} failed with state: ${state}`);
+    }
+}
+
+function handleOrderFailed(payload) {
+    const { orderId, merchantOrderId, state, amount } = payload;
+    if (state === 'FAILED') {
+        console.log(`Order ${orderId} failed with amount: ${amount} and state: ${state} and Merchant order id ${merchantOrderId}`);
+    } else {
+        console.log(`Order ${orderId} failed with state: ${state}`);
+    }
+}

@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import { celebrate, Joi } from "celebrate";
-import { phonePeSwiftVita } from "../controller/payment.controllers.js";
+import { phonePeSwiftVita ,phonePeCallback} from "../controller/payment.controllers.js";
 
 router.post("/phonePeSwiftVita", celebrate({
     body: Joi.object({
@@ -13,5 +13,7 @@ router.post("/phonePeSwiftVita", celebrate({
         redirectUrl: Joi.string().uri().required(),
     })
 }), phonePeSwiftVita);
+
+router.post("/phonepeCallback",phonePeCallback)
 
 export default router;
