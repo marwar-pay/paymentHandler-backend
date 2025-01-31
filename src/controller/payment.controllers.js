@@ -4,8 +4,7 @@ import axios from "axios";
 import crypto from "crypto";
 
 const url = 'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token'
-const username = 'your-username';
-const password = 'your-password';
+
 
 async function fetchAuthToken(client_id, client_version, client_secret) {
     const body = new URLSearchParams({
@@ -43,11 +42,6 @@ async function getValidToken(client_id, client_version, client_secret) {
     // } 
 }
 
-function generateAuthorizationHash(username, password) {
-    const hash = crypto.createHash("sha256");
-    hash.update(`${username}:${password}`);
-    return hash.digest("hex");
-}
 
 export const phonePeSwiftVita = asyncHandler(async (req, res) => {
     try {
@@ -102,20 +96,28 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
 });
 
 
+function generateAuthorizationHash(username, password) {
+    const hash = crypto.createHash("sha256");
+    hash.update(`${username}:${password}`);
+    return hash.digest("hex");
+}
 
 export const phonePeCallback = asyncHandler(async (req, res) => {
+    const username = 'testuser';
+    const password = 'testpassword123';
+    
     console.log('request recicved')
     const receivedAuthorization = req.headers['authorization'];
-    // console.log(receivedAuthorization)
-    // const expectedAuthorization = generateAuthorizationHash();
+    console.log(receivedAuthorization)
+    const expectedAuthorization = generateAuthorizationHash(username, password);
+    console.log(expectedAuthorization)
 
-    // if (receivedAuthorization !== `SHA256(${expectedAuthorization})`) {
-    //     return res.status(403).json({ message: 'Unauthorized' });
-    // }
+    if (receivedAuthorization !== `SHA256(${expectedAuthorization})`) {
+        return res.status(403).json({ message: 'Unauthorized' });
+    }
     const { event, payload } = req.body;
 
-    console.log(payload)
-    console.log(event)
+    console.log(req.body)
 
     if (!event || !payload) {
         return res.status(400).json({ message: 'Invalid request format' });
