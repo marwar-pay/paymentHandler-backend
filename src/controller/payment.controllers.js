@@ -105,19 +105,18 @@ function generateAuthorizationHash(username, password) {
 export const phonePeCallback = asyncHandler(async (req, res) => {
     const username = 'testuser';
     const password = 'testpassword123';
-    
+
     console.log('request recicved')
     const receivedAuthorization = req.headers['authorization'];
     console.log(receivedAuthorization)
     const expectedAuthorization = generateAuthorizationHash(username, password);
     console.log(expectedAuthorization)
+    console.log(req.body)
 
-    if (receivedAuthorization !== `SHA256(${expectedAuthorization})`) {
+    if (receivedAuthorization !== expectedAuthorization) {
         return res.status(403).json({ message: 'Unauthorized' });
     }
     const { event, payload } = req.body;
-
-    console.log(req.body)
 
     if (!event || !payload) {
         return res.status(400).json({ message: 'Invalid request format' });
