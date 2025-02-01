@@ -85,7 +85,7 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
             { headers }
         );
 
-        res.status(response.status).json(response.data);
+        res.status(response.status).json({resp:response.data,status:response.status});
     } catch (error) {
         console.error("Error processing payment:", error.response?.data || error.message);
         res.status(error.response?.status || 500).json({
@@ -111,6 +111,7 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
     console.log(receivedAuthorization)
     const expectedAuthorization = generateAuthorizationHash(username, password);
     console.log(expectedAuthorization)
+
     console.log(req.body)
 
     if (receivedAuthorization !== expectedAuthorization) {
