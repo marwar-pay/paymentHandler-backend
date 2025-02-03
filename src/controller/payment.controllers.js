@@ -167,3 +167,71 @@ function handleOrderFailed(payload) {
         console.log(`Order ${orderId} failed with state: ${state}`);
     }
 }
+
+export const ImpactStoreGeneratePayment = asyncHandler(async (req, res) => {
+    let { trxId, amount, redirectUrl } = req.body;
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+        "key": "9e365899-3a23-4ee1-bd66-6dd2c7178078",
+        "client_txn_id": trxId,
+        "amount": amount,
+        "p_info": "Product Name",
+        "customer_name": "Jon Doe",
+        "customer_email": "jondoe@gmail.com",
+        "customer_mobile": "9876543210",
+        "redirect_url": redirectUrl,
+        "udf1": "user defined field 1",
+        "udf2": "user defined field 2",
+        "udf3": "user defined field 3"
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+    };
+
+    let dd = await fetch("https://api.ekqr.in/api/create_order", requestOptions)
+    // .then(response => response.json())
+    // .then((result) => RespObj = result)
+    // .catch(error => console.log('error', error));
+    let json = await dd.json();
+    res.status(200).json(new ApiResponse(200, json))
+})
+
+export const PluseSyncGeneratePayment = asyncHandler(async (req, res) => {
+    let { trxId, amount, redirectUrl } = req.body;
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+        "key": "a3cf0a62-677e-4297-b8a2-1925bb327dcd",
+        "client_txn_id": trxId,
+        "amount": amount,
+        "p_info": "Product Name",
+        "customer_name": "Jon Doe",
+        "customer_email": "jondoe@gmail.com",
+        "customer_mobile": "9876543210",
+        "redirect_url": redirectUrl,
+        "udf1": "user defined field 1",
+        "udf2": "user defined field 2",
+        "udf3": "user defined field 3"
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+    };
+
+    let dd = await fetch("https://api.ekqr.in/api/create_order", requestOptions)
+    // .then(response => response.json())
+    // .then((result) => RespObj = result)
+    // .catch(error => console.log('error', error));
+    let json = await dd.json();
+    res.status(200).json(new ApiResponse(200, json))
+})
