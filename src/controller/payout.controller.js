@@ -58,3 +58,53 @@ export const processPayout = async (req, res) => {
         });
     }
 };
+
+export const processPayoutCallback = (req, res) => {
+    try {
+        console.log(req.body)
+
+        const signatureHeader = req.headers['signature'];
+        if (!signatureHeader) {
+            return res.status(400).json({ error: "Missing signature header" });
+        }
+        // Extract timestamp and signature
+        const parts = signatureHeader.split(',').reduce((acc, part) => {
+            const [key, value] = part.split('=');
+            acc[key] = value;
+            return acc;
+        }, {});
+
+        const timestamp = parts['t'];
+        const receivedSignature = parts['v0'];
+
+        if (!timestamp || !receivedSignature) {
+            return res.status(400).json({ error: "Invalid signature format" });
+        }
+
+        const bodyString = JSON.stringify(req.body);
+        const expectedSignature = crypto.createHmac('sha256', SECRET).update(`${timestamp}.${bodyString}`).digest('hex');;
+
+        console.log(receivedSignature)
+        console.log(expectedSignature)
+
+        if (!crypto.timingSafeEqual(Buffer.from(receivedSignature, 'hex'), Buffer.from(expectedSignature, 'hex'))) {
+            return res.status(401).json({ error: "Invalid signature" });
+        }
+
+        // Optional: Check timestamp tolerance (e.g., 5 minutes)
+        // const currentTime = Math.floor(Date.now() / 1000);
+        // if (Math.abs(currentTime - parseInt(timestamp)) > 300) { // 300 seconds = 5 minutes
+        //     return res.status(400).json({ error: "Timestamp too old" });
+        // }
+
+        const {event_type,data}= req.body;
+        console.log(req.body)
+
+        console.log("✅ Webhook signature validated!");
+        res.status(200).json({ message: "Webhook received successfully" });
+
+    } catch (error) {
+        console.error("Webhook validation error:", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}

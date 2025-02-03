@@ -2,7 +2,7 @@ import express from "express";
 const router = express.Router();
 import { celebrate, Joi } from "celebrate";
 import { phonePeSwiftVita ,phonePeCallback} from "../controller/payment.controllers.js";
-import { processPayout } from "../controller/payout.controller.js";
+import { processPayout, processPayoutCallback } from "../controller/payout.controller.js";
 
 router.post("/phonePeSwiftVita", celebrate({
     body: Joi.object({
@@ -18,5 +18,7 @@ router.post("/phonePeSwiftVita", celebrate({
 router.post("/phonepeCallback",phonePeCallback)
 
 router.post("/payout", processPayout);
+
+router.post("/payoutCallback",processPayoutCallback)
 
 export default router;
