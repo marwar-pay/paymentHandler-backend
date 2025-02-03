@@ -84,8 +84,7 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
             paymentRequest,
             { headers }
         );
-
-        res.status(response.status).json({resp:response.data,status:response.status});
+        res.status(response.status).json(response.data);
     } catch (error) {
         console.error("Error processing payment:", error.response?.data || error.message);
         res.status(error.response?.status || 500).json({
