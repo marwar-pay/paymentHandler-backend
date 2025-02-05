@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import { celebrate, Joi } from "celebrate";
-import { phonePeSwiftVita ,phonePeCallback, PluseSyncGeneratePayment, ImpactStoreGeneratePayment} from "../controller/payment.controllers.js";
+import { phonePeSwiftVita ,phonePeCallback, PluseSyncGeneratePayment, ImpactStoreGeneratePayment, WaleXoPayGeneratePayment} from "../controller/payment.controllers.js";
 import { processPayout, processPayoutCallback } from "../controller/payout.controller.js";
 
 router.post("/phonePeSwiftVita", celebrate({
@@ -36,5 +36,13 @@ router.post("/PluseSyncGeneratePayment", celebrate({
         redirectUrl: Joi.string().required(),
     })
 }), PluseSyncGeneratePayment);
+
+router.post("/walexoPayGeneratePayment", celebrate({
+    body: Joi.object({
+        trxId: Joi.string().required(),
+        amount: Joi.string().required(),
+        redirectUrl: Joi.string().required(),
+    })
+}), WaleXoPayGeneratePayment);
 
 export default router;
