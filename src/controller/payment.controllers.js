@@ -1,12 +1,15 @@
-import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import axios from "axios";
-import crypto from "crypto";
 
-const url = 'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token'
+const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
+const client_id = 'SWIFTVITAUAT_2501131447128754045048';
+const client_secret = 'N2Q3NGEzYjQtOWNlNC00ODExLThmZjAtOWQwMzE1MTEzZTRl';
+const client_version = 1;
 
+let tokenData = null;
 
-async function fetchAuthToken(client_id, client_version, client_secret) {
+async function fetchAuthToken() {
+    console.log("Fetching new auth token...");
     const body = new URLSearchParams({
         client_id,
         client_version,
@@ -16,13 +19,11 @@ async function fetchAuthToken(client_id, client_version, client_secret) {
 
     try {
         const response = await axios.post(url, body, {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
 
         const { access_token, expires_at } = response.data;
-        let tokenData = { access_token, expires_at };
+        tokenData = { access_token, expires_at }; // Updating global tokenData
         return tokenData;
     } catch (error) {
         console.error("Error fetching token:", error.response?.data || error.message);
@@ -30,45 +31,45 @@ async function fetchAuthToken(client_id, client_version, client_secret) {
     }
 }
 
-async function getValidToken(client_id, client_version, client_secret) {
-    // const bufferTime = 10; // Refresh token 10 seconds before expiration
-    // const currentTime = Date.now() / 1000;
+async function getValidToken() {
+    const bufferTime = 120; // Refresh token 2 minutes before expiry
+    const currentTime = Math.floor(Date.now() / 1000); // Convert to seconds
 
-    // if (tokenData && tokenData.expires_at > currentTime + bufferTime) {
-    //     return tokenData.access_token;
-    // } else {
-    const newTokenData = await fetchAuthToken(client_id, client_version, client_secret);
-    return newTokenData.access_token;
-    // } 
+    if (tokenData && tokenData.expires_at > currentTime + bufferTime) {
+        return tokenData.access_token;
+    }
+    
+    tokenData = await fetchAuthToken();
+    return tokenData.access_token;
 }
-
 
 export const phonePeSwiftVita = asyncHandler(async (req, res) => {
     try {
-        const { client_id, client_version, client_secret, merchantOrderId, amount, redirectUrl } = req.body;
+        const { merchantOrderId, amount, redirectUrl } = req.body;
 
-        if (!client_id || !client_version || !client_secret || !merchantOrderId || !amount || !redirectUrl) {
+        if (!merchantOrderId || !amount || !redirectUrl) {
             return res.status(400).json({ message: "Missing required parameters" });
         }
 
-        const accessToken = await getValidToken(client_id, client_version, client_secret);
+        const accessToken = await getValidToken();
         const paymentRequest = {
             merchantOrderId,
             amount: Number(amount),
-            expireAfter: 1200,
-            metaInfo: {
-                udf1: ".............",
-            },
+            expireAfter: 600,
             paymentFlow: {
                 type: "PG_CHECKOUT",
                 message: "Payment message used for collect requests",
-                merchantUrls: {
-                    redirectUrl,
-                },
+                merchantUrls: { redirectUrl },
                 paymentModeConfig: {
                     enabledPaymentModes: [
                         { type: "UPI_INTENT" },
+                        { type: "UPI_COLLECT" },
                         { type: "UPI_QR" },
+                        { type: "NET_BANKING" },
+                        {
+                            type: "CARD",
+                            cardTypes: ["DEBIT_CARD", "CREDIT_CARD"],
+                        },
                     ],
                 },
             },
@@ -84,6 +85,7 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
             paymentRequest,
             { headers }
         );
+
         res.status(response.status).json(response.data);
     } catch (error) {
         console.error("Error processing payment:", error.response?.data || error.message);
@@ -93,6 +95,7 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
         });
     }
 });
+
 
 
 function generateAuthorizationHash(username, password) {
@@ -105,13 +108,8 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
     const username = 'testuser';
     const password = 'testpassword123';
 
-    console.log('request recicved')
     const receivedAuthorization = req.headers['authorization'];
-    console.log(receivedAuthorization)
     const expectedAuthorization = generateAuthorizationHash(username, password);
-    console.log(expectedAuthorization)
-
-    console.log(req.body)
 
     if (receivedAuthorization !== expectedAuthorization) {
         return res.status(403).json({ message: 'Unauthorized' });

@@ -6,9 +6,6 @@ import { processPayout, processPayoutCallback } from "../controller/payout.contr
 
 router.post("/phonePeSwiftVita", celebrate({
     body: Joi.object({
-        client_id: Joi.string().required(),
-        client_version: Joi.number().required(),
-        client_secret: Joi.string().required(),
         merchantOrderId: Joi.string().required(),
         amount: Joi.number().required(),
         redirectUrl: Joi.string().uri().required(),
