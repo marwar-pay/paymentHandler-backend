@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import axios from "axios";
-import {ApiResponse} from "../utils/ApiResponse.js"
+import { ApiResponse } from "../utils/ApiResponse.js"
 
 const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
 const client_id = 'SWIFTVITAUAT_2501131447128754045048';
@@ -39,7 +39,7 @@ async function getValidToken() {
     if (tokenData && tokenData.expires_at > currentTime + bufferTime) {
         return tokenData.access_token;
     }
-    
+
     tokenData = await fetchAuthToken();
     return tokenData.access_token;
 }
@@ -149,23 +149,56 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
     }
 });
 
-function handleOrderCompleted(payload) {
+async function handleOrderCompleted(payload) {
     const { orderId, merchantOrderId, state, amount } = payload;
+
     if (state === 'COMPLETED') {
         console.log(`Order ${orderId} completed with amount: ${amount} and Merchant order id ${merchantOrderId}`);
+        try {
+            const response = await fetch(`https://ajay.yunicare.in/api/order/orders/${merchantOrderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ "status": "processing", "paymentStatus": "completed" })
+            });
+            if (!response.ok) {
+                throw new Error(`API request failed with status: ${response.status}`);
+            }
+            const data = await response.json();
+        } catch (error) {
+            console.error('Error updating order status:', error);
+        }
     } else {
         console.log(`Order ${orderId} failed with state: ${state}`);
     }
 }
 
-function handleOrderFailed(payload) {
+async function handleOrderFailed(payload) {
     const { orderId, merchantOrderId, state, amount } = payload;
     if (state === 'FAILED') {
         console.log(`Order ${orderId} failed with amount: ${amount} and state: ${state} and Merchant order id ${merchantOrderId}`);
+        try {
+            const response = await fetch(`http://localhost:5067/api/order/orders/${merchantOrderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ "status": "cancelled", "paymentStatus": "failed" })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed with status: ${response.status}`);
+            }
+            const data = await response.json();
+        } catch (error) {
+            console.error('Error updating order status:', error);
+        }
     } else {
         console.log(`Order ${orderId} failed with state: ${state}`);
     }
 }
+handleOrderFailed({"orderId":"hdjhfjdhfjh", "merchantOrderId":"67937e2ec9f63c59e09b485f", "state":"FAILED", "amount":300})
 
 export const ImpactStoreGeneratePayment = asyncHandler(async (req, res) => {
     let { trxId, amount, redirectUrl } = req.body;
