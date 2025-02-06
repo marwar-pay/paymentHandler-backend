@@ -179,7 +179,7 @@ async function handleOrderFailed(payload) {
     if (state === 'FAILED') {
         console.log(`Order ${orderId} failed with amount: ${amount} and state: ${state} and Merchant order id ${merchantOrderId}`);
         try {
-            const response = await fetch(`http://localhost:5067/api/order/orders/${merchantOrderId}/status`, {
+            const response = await fetch(`https://ajay.yunicare.in/api/order/orders/${merchantOrderId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
