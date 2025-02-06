@@ -198,7 +198,6 @@ async function handleOrderFailed(payload) {
         console.log(`Order ${orderId} failed with state: ${state}`);
     }
 }
-handleOrderFailed({"orderId":"hdjhfjdhfjh", "merchantOrderId":"67937e2ec9f63c59e09b485f", "state":"FAILED", "amount":300})
 
 export const ImpactStoreGeneratePayment = asyncHandler(async (req, res) => {
     let { trxId, amount, redirectUrl } = req.body;
