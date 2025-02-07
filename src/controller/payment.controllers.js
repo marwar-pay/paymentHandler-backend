@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import axios from "axios";
 import { ApiResponse } from "../utils/ApiResponse.js"
+import crypto from 'crypto';
 
 const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
 const client_id = 'SWIFTVITAUAT_2501131447128754045048';
@@ -112,9 +113,9 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
     const receivedAuthorization = req.headers['authorization'];
     const expectedAuthorization = generateAuthorizationHash(username, password);
 
-    if (receivedAuthorization !== expectedAuthorization) {
-        return res.status(403).json({ message: 'Unauthorized' });
-    }
+    // if (receivedAuthorization !== expectedAuthorization) {
+    //     return res.status(403).json({ message: 'Unauthorized' });
+    // }
     const { event, payload } = req.body;
 
     if (!event || !payload) {
@@ -141,7 +142,6 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
             default:
                 return res.status(400).json({ message: 'Unknown event type' });
         }
-
         res.status(200).json({ message: 'Webhook received and processed successfully' });
     } catch (error) {
         console.error('Error processing webhook:', error);
