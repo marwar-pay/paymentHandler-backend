@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import axios from "axios";
 import { ApiResponse } from "../utils/ApiResponse.js"
 import crypto from 'crypto';
+import cron from "node-cron";
 
 const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
 const client_id = 'SWIFTVITAUAT_2501131447128754045048';
@@ -9,6 +10,7 @@ const client_secret = 'N2Q3NGEzYjQtOWNlNC00ODExLThmZjAtOWQwMzE1MTEzZTRl';
 const client_version = 1;
 
 let tokenData = null;
+const jobs = {};
 
 async function fetchAuthToken() {
     console.log("Fetching new auth token...");
@@ -62,6 +64,7 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
                 type: "PG_CHECKOUT",
                 message: "Payment message used for collect requests",
                 merchantUrls: { redirectUrl },
+                metaInfo: {},
                 paymentModeConfig: {
                     enabledPaymentModes: [
                         { type: "UPI_INTENT" },
@@ -87,7 +90,9 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
             paymentRequest,
             { headers }
         );
-
+        if (response.status === 200) {
+            startOrderStatusCron(merchantOrderId);
+        }
         res.status(response.status).json(response.data);
     } catch (error) {
         console.error("Error processing payment:", error.response?.data || error.message);
@@ -98,7 +103,50 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
     }
 });
 
-
+async function startOrderStatusCron(orderId) {
+    if (jobs[orderId]) {
+        jobs[orderId].stop();
+        delete jobs[orderId];
+    }
+    jobs[orderId] = cron.schedule("*/30 * * * * *", async () => {
+        try {
+            const response = await axios.get(`https://ajay.yunicare.in/api/order/orders/${orderId}`);
+            const orderStatus = response.data?.order?.paymentStatus;
+            console.log(`Current Order Status from DB: ${orderStatus}`);
+            if (orderStatus === "completed" || orderStatus === "failed") {
+                console.log(`Order ${orderId} is ${orderStatus}. Stopping cron job.`);
+                jobs[orderId].stop();
+                delete jobs[orderId]; // Remove from tracking
+                return;
+            }
+            const accessToken = await getValidToken();
+            console.log("Fetching order status from PhonePe...");
+            const phonepeResponse = await axios.get(
+                `https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/${orderId}/status?details=false`,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `O-Bearer ${accessToken}`,
+                    },
+                }
+            );
+            if (phonepeResponse.data?.state === "COMPLETED") {
+                await updateOrderStatus(orderId, "processing", "completed");
+                console.log(`Order ${orderId} marked as completed.`);
+                jobs[orderId].stop();
+                delete jobs[orderId];
+            } else if (phonepeResponse.data?.state === "FAILED") {
+                await updateOrderStatus(orderId, "cancelled", "failed");
+                console.log(`Order ${orderId} marked as failed.`);
+                jobs[orderId].stop();
+                delete jobs[orderId];
+            }
+        } catch (error) {
+            console.error(`Error checking/updating order status for Order ID ${orderId}:`, error.message);
+        }
+    });
+    jobs[orderId].start();
+}
 
 function generateAuthorizationHash(username, password) {
     const hash = crypto.createHash("sha256");
@@ -121,14 +169,25 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
     if (!event || !payload) {
         return res.status(400).json({ message: 'Invalid request format' });
     }
+    const { orderId, merchantOrderId, state, amount } = payload;
 
     try {
         switch (event) {
             case 'checkout.order.completed':
-                handleOrderCompleted(payload);
+                if (state === 'COMPLETED') {
+                    console.log(`Order ${orderId} completed with amount: ${amount} and Merchant order ID: ${merchantOrderId}`);
+                    await updateOrderStatus(merchantOrderId, "processing", "completed");
+                } else {
+                    console.log(`Order ${orderId} failed with state: ${state}`);
+                }
                 break;
             case 'checkout.order.failed':
-                handleOrderFailed(payload);
+                if (state === 'FAILED') {
+                    console.log(`Order ${orderId} failed with amount: ${amount}, state: ${state}, and Merchant order ID: ${merchantOrderId}`);
+                    await updateOrderStatus(merchantOrderId, "cancelled", "failed");
+                } else {
+                    console.log(`Order ${orderId} is not failed. Current state: ${state}`);
+                }
                 break;
             // case 'pg.refund.accepted':
             //     handleRefundAccepted(payload);
@@ -149,55 +208,28 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
     }
 });
 
-async function handleOrderCompleted(payload) {
-    const { orderId, merchantOrderId, state, amount } = payload;
 
-    if (state === 'COMPLETED') {
-        console.log(`Order ${orderId} completed with amount: ${amount} and Merchant order id ${merchantOrderId}`);
-        try {
-            const response = await fetch(`https://ajay.yunicare.in/api/order/orders/${merchantOrderId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ "status": "processing", "paymentStatus": "completed" })
-            });
-            if (!response.ok) {
-                throw new Error(`API request failed with status: ${response.status}`);
-            }
-            const data = await response.json();
-        } catch (error) {
-            console.error('Error updating order status:', error);
+async function updateOrderStatus(merchantOrderId, status, paymentStatus) {
+    try {
+        const response = await fetch(`https://ajay.yunicare.in/api/order/orders/${merchantOrderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status, paymentStatus })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API request failed with status: ${response.status}`);
         }
-    } else {
-        console.log(`Order ${orderId} failed with state: ${state}`);
+
+        const data = await response.json();
+        return data; // Returning data in case it's needed
+    } catch (error) {
+        console.error('Error updating order status:', error);
     }
 }
 
-async function handleOrderFailed(payload) {
-    const { orderId, merchantOrderId, state, amount } = payload;
-    if (state === 'FAILED') {
-        console.log(`Order ${orderId} failed with amount: ${amount} and state: ${state} and Merchant order id ${merchantOrderId}`);
-        try {
-            const response = await fetch(`https://ajay.yunicare.in/api/order/orders/${merchantOrderId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ "status": "cancelled", "paymentStatus": "failed" })
-            });
-
-            if (!response.ok) {
-                throw new Error(`API request failed with status: ${response.status}`);
-            }
-            const data = await response.json();
-        } catch (error) {
-            console.error('Error updating order status:', error);
-        }
-    } else {
-        console.log(`Order ${orderId} failed with state: ${state}`);
-    }
-}
 
 export const ImpactStoreGeneratePayment = asyncHandler(async (req, res) => {
     let { trxId, amount, redirectUrl } = req.body;
