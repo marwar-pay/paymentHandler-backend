@@ -199,15 +199,14 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
             //     handleRefundFailed(payload);
             //     break;
             default:
-                return res.status(400).json({ message: 'Unknown event type' });
+                return res.status(200).json({ message: 'Unknown event type' });
         }
         res.status(200).json({ message: 'Webhook received and processed successfully' });
     } catch (error) {
         console.error('Error processing webhook:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(200).json({ message: 'Internal Server Error' });
     }
 });
-
 
 async function updateOrderStatus(merchantOrderId, status, paymentStatus) {
     try {
@@ -229,7 +228,6 @@ async function updateOrderStatus(merchantOrderId, status, paymentStatus) {
         console.error('Error updating order status:', error);
     }
 }
-
 
 export const ImpactStoreGeneratePayment = asyncHandler(async (req, res) => {
     let { trxId, amount, redirectUrl } = req.body;
