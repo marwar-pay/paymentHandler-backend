@@ -162,12 +162,12 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
     const expectedAuthorization = generateAuthorizationHash(username, password);
 
     if (receivedAuthorization !== expectedAuthorization) {
-        return res.status(403).json({ message: 'Unauthorized' });
+        return res.status(200).json({ message: 'Unauthorized' });
     }
     const { event, payload } = req.body;
 
     if (!event || !payload) {
-        return res.status(400).json({ message: 'Invalid request format' });
+        return res.status(200).json({ message: 'Invalid request format' });
     }
     const { orderId, merchantOrderId, state, amount } = payload;
 
@@ -204,7 +204,7 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
         res.status(200).json({ message: 'Webhook received and processed successfully' });
     } catch (error) {
         console.error('Error processing webhook:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(200).json({ message: 'Internal Server Error' });
     }
 });
 
