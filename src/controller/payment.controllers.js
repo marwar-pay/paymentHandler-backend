@@ -161,9 +161,9 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
     const receivedAuthorization = req.headers['authorization'];
     const expectedAuthorization = generateAuthorizationHash(username, password);
 
-    // if (receivedAuthorization !== expectedAuthorization) {
-    //     return res.status(403).json({ message: 'Unauthorized' });
-    // }
+    if (receivedAuthorization !== expectedAuthorization) {
+        return res.status(403).json({ message: 'Unauthorized' });
+    }
     const { event, payload } = req.body;
 
     if (!event || !payload) {
