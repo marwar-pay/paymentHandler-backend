@@ -4,9 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import crypto from 'crypto';
 import cron from "node-cron";
 
-const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
-const client_id = 'SWIFTVITAUAT_2501131447128754045048';
-const client_secret = 'N2Q3NGEzYjQtOWNlNC00ODExLThmZjAtOWQwMzE1MTEzZTRl';
+const url = "https://api.phonepe.com/apis/identity-manager/v1/oauth/token";
+const client_id = 'SU2502191439075663427094';
+const client_secret = '66e46ce1-0fdd-43d7-b958-a02f65425602';
 const client_version = 1;
 
 let tokenData = null;
@@ -86,7 +86,7 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
         };
 
         const response = await axios.post(
-            "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
+            "https://api.phonepe.com/apis/pg/checkout/v2/pay",
             paymentRequest,
             { headers }
         );
@@ -155,8 +155,8 @@ function generateAuthorizationHash(username, password) {
 }
 
 export const phonePeCallback = asyncHandler(async (req, res) => {
-    const username = 'testuser';
-    const password = 'testpassword123';
+    const username = 'swiftvita';
+    const password = 'swiftvita123';
 
     const receivedAuthorization = req.headers['authorization'];
     const expectedAuthorization = generateAuthorizationHash(username, password);
@@ -188,15 +188,6 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
                     console.log(`Order ${orderId} is not failed. Current state: ${state}`);
                 }
                 break;
-            // case 'pg.refund.accepted':
-            //     handleRefundAccepted(payload);
-            //     break;
-            // case 'pg.refund.completed':
-            //     handleRefundCompleted(payload);
-            //     break;
-            // case 'pg.refund.failed':
-            //     handleRefundFailed(payload);
-            //     break;
             default:
                 return res.status(200).json({ message: 'Unknown event type' });
         }
@@ -363,3 +354,51 @@ export const PluseSyncGeneratePayment = asyncHandler(async (req, res) => {
     let json = await dd.json();
     res.status(200).json(new ApiResponse(200, json))
 })
+
+export const easybuzz = asyncHandler(async (req, res) => {
+    const key = "4OW3YGVH1Q";
+    const salt = "OL4SAHG5J6";
+
+    const txnid = 'JKFJKJ89';
+    const amount = "100.00";
+    const productinfo = "Test Product";
+    const firstname = "John";
+    const email = "john@example.com";
+    const phone = "9999999999";
+    const surl = "https://yourwebsite.com/success"; // Success URL
+    const furl = "https://yourwebsite.com/failure"; // Failure URL
+
+    const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${salt}`;
+    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
+
+    const paymentData = {
+        key,
+        txnid,
+        amount,
+        productinfo,
+        firstname,
+        phone,
+        email,
+        surl,
+        furl,
+        hash,
+        show_payment_mode: "UPI",
+        request_flow: "SEAMLESS"
+    };
+    try {
+        const response = await axios.post("https://pay.easebuzz.in/payment/initiateLink", paymentData, {
+            headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        });
+        // const paymentObject = {
+        //     "payment_mode": "UPI",
+        //     "upi_qr": true,
+        //     'upi_va': '8989898989@ybl',
+        //     "access_key": response.data?.data,
+        //     "request_mode": "SUVA"
+        // };
+        res.status(200).json({ success: true, data: response.data });
+    } catch (error) {
+        console.error("Error initiating payment:", error.response ? error.response.data : error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
