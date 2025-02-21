@@ -13,7 +13,6 @@ let tokenData = null;
 const jobs = {};
 
 async function fetchAuthToken() {
-    console.log("Fetching new auth token...");
     const body = new URLSearchParams({
         client_id,
         client_version,
@@ -30,7 +29,6 @@ async function fetchAuthToken() {
         tokenData = { access_token, expires_at }; // Updating global tokenData
         return tokenData;
     } catch (error) {
-        console.error("Error fetching token:", error.response?.data || error.message);
         throw new Error("Failed to fetch authentication token.");
     }
 }
@@ -95,7 +93,6 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
         }
         res.status(response.status).json(response.data);
     } catch (error) {
-        console.error("Error processing payment:", error.response?.data || error.message);
         res.status(error.response?.status || 500).json({
             message: "Payment processing failed",
             error: error.response?.data || error.message,
@@ -112,17 +109,14 @@ async function startOrderStatusCron(orderId) {
         try {
             const response = await axios.get(`https://ajay.yunicare.in/api/order/orders/${orderId}`);
             const orderStatus = response.data?.order?.paymentStatus;
-            console.log(`Current Order Status from DB: ${orderStatus}`);
             if (orderStatus === "completed" || orderStatus === "failed") {
-                console.log(`Order ${orderId} is ${orderStatus}. Stopping cron job.`);
                 jobs[orderId].stop();
                 delete jobs[orderId]; // Remove from tracking
                 return;
             }
             const accessToken = await getValidToken();
-            console.log("Fetching order status from PhonePe...");
             const phonepeResponse = await axios.get(
-                `https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/${orderId}/status?details=false`,
+                `https://api.phonepe.com/apis/pg/checkout/v2/order/${orderId}/status`,
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -132,12 +126,10 @@ async function startOrderStatusCron(orderId) {
             );
             if (phonepeResponse.data?.state === "COMPLETED") {
                 await updateOrderStatus(orderId, "processing", "completed");
-                console.log(`Order ${orderId} marked as completed.`);
                 jobs[orderId].stop();
                 delete jobs[orderId];
             } else if (phonepeResponse.data?.state === "FAILED") {
                 await updateOrderStatus(orderId, "cancelled", "failed");
-                console.log(`Order ${orderId} marked as failed.`);
                 jobs[orderId].stop();
                 delete jobs[orderId];
             }
@@ -155,6 +147,8 @@ function generateAuthorizationHash(username, password) {
 }
 
 export const phonePeCallback = asyncHandler(async (req, res) => {
+    console.log("callback recieved")
+    
     const username = 'swiftvita';
     const password = 'swiftvita123';
 
@@ -164,7 +158,6 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
         return res.status(200).json({ message: 'Unauthorized' });
     }
     const { event, payload } = req.body;
-
     if (!event || !payload) {
         return res.status(200).json({ message: 'Invalid request format' });
     }
@@ -174,7 +167,6 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
         switch (event) {
             case 'checkout.order.completed':
                 if (state === 'COMPLETED') {
-                    console.log(`Order ${orderId} completed with amount: ${amount} and Merchant order ID: ${merchantOrderId}`);
                     await updateOrderStatus(merchantOrderId, "processing", "completed");
                 } else {
                     console.log(`Order ${orderId} failed with state: ${state}`);
@@ -182,7 +174,6 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
                 break;
             case 'checkout.order.failed':
                 if (state === 'FAILED') {
-                    console.log(`Order ${orderId} failed with amount: ${amount}, state: ${state}, and Merchant order ID: ${merchantOrderId}`);
                     await updateOrderStatus(merchantOrderId, "cancelled", "failed");
                 } else {
                     console.log(`Order ${orderId} is not failed. Current state: ${state}`);
@@ -193,7 +184,6 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
         }
         res.status(200).json({ message: 'Webhook received and processed successfully' });
     } catch (error) {
-        console.error('Error processing webhook:', error);
         res.status(200).json({ message: 'Internal Server Error' });
     }
 });
