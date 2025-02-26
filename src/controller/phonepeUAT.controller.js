@@ -161,6 +161,20 @@ export const phonePeUATCallback = asyncHandler(async (req, res) => {
 
     try {
         switch (event) {
+            case 'checkout.order.completed':
+                if (state === 'COMPLETED') {
+                    await updateOrderStatus(merchantOrderId, "processing", "completed");
+                } else {
+                    console.log(`Order ${orderId} failed with state: ${state}`);
+                }
+                break;
+            case 'checkout.order.failed':
+                if (state === 'FAILED') {
+                    await updateOrderStatus(merchantOrderId, "cancelled", "failed");
+                } else {
+                    console.log(`Order ${orderId} is not failed. Current state: ${state}`);
+                }
+                break;
             case 'pg.order.completed':
                 if (state === 'COMPLETED') {
                     await updateOrderStatus(merchantOrderId, "processing", "completed");
