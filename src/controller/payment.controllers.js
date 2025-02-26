@@ -9,6 +9,11 @@ const client_id = 'SU2502191439075663427094';
 const client_secret = '66e46ce1-0fdd-43d7-b958-a02f65425602';
 const client_version = 1;
 
+// const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
+// const client_id = 'SWIFTVITAUAT_2502251535214216422294';
+// const client_secret = 'ZDE0ZDE5ZmItNTRlZi00MTI3LWI2YWItN2ZiZWY1MTY4ZWE5';
+// const client_version = 1;
+
 let tokenData = null;
 const jobs = {};
 

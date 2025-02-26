@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import phonePe from "./routes/payment.routes.js";
+import phonepeUat from "./routes/phonepeUAT.routes.js"
 import { ApiError } from "./utils/ApiError.js";
 
 const app = express();
@@ -22,7 +23,7 @@ app.use(cookieParser());
 app.use(express.static("public"));
 
 app.use("/payment", phonePe);
-
+app.use("/api/uat", phonepeUat);
 
 // Catch-all for undefined routes
 app.get("/", (req, res, next) => {
