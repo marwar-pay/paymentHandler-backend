@@ -126,6 +126,16 @@ async function startOrderStatusCron(orderId) {
         }
     });
     jobs[orderId].start();
+    setTimeout(() => {
+        stopCronJob(orderId);
+    }, 10 * 60 * 1000);
+}
+
+function stopCronJob(orderId) {
+    if (jobs[orderId]) {
+        jobs[orderId].stop();
+        delete jobs[orderId];
+    }
 }
 
 function generateAuthorizationHash(username, password) {
@@ -135,8 +145,8 @@ function generateAuthorizationHash(username, password) {
 }
 
 export const phonePeUATCallback = asyncHandler(async (req, res) => {
-    const username = 'swiftvita';
-    const password = 'swiftvita123';
+    const username = 'testuser';
+    const password = 'testpassword123';
 
     const receivedAuthorization = req.headers['authorization'];
     const expectedAuthorization = generateAuthorizationHash(username, password);
@@ -166,7 +176,7 @@ export const phonePeUATCallback = asyncHandler(async (req, res) => {
                 }
                 break;
             default:
-                return res.status(200).json({ message: 'Unknown event type' });
+                return res.status(200).json({ message: 'Webhook received and processed' });
         }
         res.status(200).json({ message: 'Webhook received and processed successfully' });
     } catch (error) {

@@ -143,6 +143,16 @@ async function startOrderStatusCron(orderId) {
         }
     });
     jobs[orderId].start();
+    setTimeout(() => {
+        stopCronJob(orderId);
+    }, 10 * 60 * 1000);
+}
+
+function stopCronJob(orderId) {
+    if (jobs[orderId]) {
+        jobs[orderId].stop();
+        delete jobs[orderId];
+    }
 }
 
 function generateAuthorizationHash(username, password) {
@@ -153,7 +163,7 @@ function generateAuthorizationHash(username, password) {
 
 export const phonePeCallback = asyncHandler(async (req, res) => {
     console.log("callback recieved")
-    
+
     const username = 'swiftvita';
     const password = 'swiftvita123';
 
