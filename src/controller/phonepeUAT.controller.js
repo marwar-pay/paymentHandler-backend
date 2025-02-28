@@ -54,15 +54,33 @@ export const phonePeUAT = asyncHandler(async (req, res) => {
         }
 
         const accessToken = await getValidToken();
+        // const paymentRequest = {
+        //     merchantOrderId,
+        //     "amount": Number(amount),
+        //     "expireAfter": 600,
+        //     "metaInfo": {},
+        //     "paymentFlow": {
+        //         "type": "PG",
+        //         "paymentMode": {
+        //             "type": "UPI_QR"
+        //         }
+        //     }
+        // }
+
         const paymentRequest = {
             merchantOrderId,
             "amount": Number(amount),
             "expireAfter": 600,
             "metaInfo": {},
+            "deviceContext": {
+                "deviceOS": "ANDROID",
+                "merchantCallBackScheme": ""
+            },
             "paymentFlow": {
                 "type": "PG",
                 "paymentMode": {
-                    "type": "UPI_QR"
+                    "type": "UPI_INTENT",
+                    "targetApp": "com.phonepe.app"
                 }
             }
         }
