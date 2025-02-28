@@ -71,16 +71,13 @@ export const phonePeUAT = asyncHandler(async (req, res) => {
             merchantOrderId,
             "amount": Number(amount),
             "expireAfter": 600,
-            "metaInfo": {},
             "deviceContext": {
-                "deviceOS": "ANDROID",
-                "merchantCallBackScheme": ""
+                "deviceOS": "ANDROID"
             },
             "paymentFlow": {
                 "type": "PG",
                 "paymentMode": {
-                    "type": "UPI_INTENT",
-                    "targetApp": "com.phonepe.app"
+                    "type": "UPI_INTENT"
                 }
             }
         }
