@@ -194,6 +194,20 @@ export const phonePeCallback = asyncHandler(async (req, res) => {
                     console.log(`Order ${orderId} is not failed. Current state: ${state}`);
                 }
                 break;
+            case 'pg.order.completed':
+                if (state === 'COMPLETED') {
+                    await updateOrderStatus(merchantOrderId, "processing", "completed");
+                } else {
+                    console.log(`Order ${orderId} failed with state: ${state}`);
+                }
+                break;
+            case 'pg.order.failed':
+                if (state === 'FAILED') {
+                    await updateOrderStatus(merchantOrderId, "cancelled", "failed");
+                } else {
+                    console.log(`Order ${orderId} is not failed. Current state: ${state}`);
+                }
+                break;
             default:
                 return res.status(200).json({ message: 'Unknown event type' });
         }

@@ -4,9 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import crypto from 'crypto';
 import cron from "node-cron";
 
-const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
-const client_id = 'SWIFTVITAUAT_2502251535214216422294';
-const client_secret = 'ZDE0ZDE5ZmItNTRlZi00MTI3LWI2YWItN2ZiZWY1MTY4ZWE5';
+const url = "https://api.phonepe.com/apis/identity-manager/v1/oauth/token";
+const client_id = 'SU2502191439075663427094';
+const client_secret = '66e46ce1-0fdd-43d7-b958-a02f65425602';
 const client_version = 1;
 
 let tokenData = null;
@@ -54,18 +54,6 @@ export const phonePeUAT = asyncHandler(async (req, res) => {
         }
 
         const accessToken = await getValidToken();
-        // const paymentRequest = {
-        //     merchantOrderId,
-        //     "amount": Number(amount),
-        //     "expireAfter": 600,
-        //     "metaInfo": {},
-        //     "paymentFlow": {
-        //         "type": "PG",
-        //         "paymentMode": {
-        //             "type": "UPI_QR"
-        //         }
-        //     }
-        // }
 
         const paymentRequest = {
             merchantOrderId,
@@ -87,7 +75,7 @@ export const phonePeUAT = asyncHandler(async (req, res) => {
         };
 
         const response = await axios.post(
-            "https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/pay",
+            "https://api.phonepe.com/apis/pg/payments/v2/pay",
             paymentRequest,
             { headers }
         );
@@ -119,7 +107,7 @@ async function startOrderStatusCron(orderId) {
             }
             const accessToken = await getValidToken();
             const phonepeResponse = await axios.get(
-                `https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/order/${orderId}/status?details=false`,
+                `https://api.phonepe.com/apis/pg/payments/v2/order/${orderId}/status?details=false`,
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -160,8 +148,8 @@ function generateAuthorizationHash(username, password) {
 }
 
 export const phonePeUATCallback = asyncHandler(async (req, res) => {
-    const username = 'testuser';
-    const password = 'testpassword123';
+    const username = 'swiftvita';
+    const password = 'swiftvita123';
 
     const receivedAuthorization = req.headers['authorization'];
     const expectedAuthorization = generateAuthorizationHash(username, password);
