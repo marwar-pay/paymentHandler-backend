@@ -20,7 +20,7 @@ export const createCashfreeOrder = asyncHandler(async (req, res) => {
             },
             "order_meta": {
                 "return_url": returnUrl,
-                "notify_url": "https://1923-223-184-46-223.ngrok-free.app/api/cashfree/verify"
+                "notify_url": "https://payment.yunicare.in/api/cashfree/verify"
             }
         };
 
