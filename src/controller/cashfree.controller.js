@@ -43,36 +43,57 @@ export const createCashfreeOrder = asyncHandler(async (req, res) => {
 
 export const verifyCashfreeOrder = asyncHandler(async (req, res) => {
     try {
-        const { order, payment, event_time } = req.body.data;
-        console.log(" cashfree.controller.js:47 ~ verifyCashfreeOrder ~ req.body:", req.body);
-        const order_id = order.order_id;
-        const bank_reference = payment.bank_reference;
-        const payment_status = payment.payment_status;
-        await updateOrderStatus(order_id, payment_status === "SUCCESS" ? "processing" : "cancelled", payment_status)
-    } catch (error) {
-        console.log(" cashfree.controller.js:48 ~ verifyCashfreeOrder ~ error:", error);
+        const { data } = req.body;
 
-
-    }
-})
-
-async function updateOrderStatus(merchantOrderId, status, paymentStatus) {
-    try {
-        const response = await fetch(`https://ajay.yunicare.in/api/order/orders/${merchantOrderId}/status`, {
-            method: 'PUT',
-
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ status, paymentStatus })
-        });
-        if (!response.ok) {
-            throw new Error(`API request failed with status: ${response.status}`);
+        if (!data || !data.order || !data.payment) {
+            return res.status(200).json({ success: false, message: "Invalid request data" });
         }
 
-        const data = await response.json();
-        return data; // Returning data in case it's needed
+        const { order, payment } = data;
+        const order_id = order.order_id;
+        const payment_status = payment.payment_status;
+        const bank_reference = payment.bank_reference;
+
+        // Determine new order status based on payment status
+        const newOrderStatus = payment_status === "SUCCESS" ? "processing" : "cancelled";
+        const paymentFinalStatus = payment_status === "SUCCESS" ? "completed" : "failed";
+
+        // Update order status in database
+        const updateResponse = await updateOrderStatus(order_id, newOrderStatus, paymentFinalStatus);
+
+        if (!updateResponse) {
+            return res.status(200).json({ success: false, message: "update order status" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Order status updated successfully",
+        });
     } catch (error) {
-        console.error('Error updating order status:', error);
+        console.error("Error in verifyCashfreeOrder:", error);
+        return res.status(200).json({ success: false, message: "Internal server error" });
+    }
+});
+
+// Function to update order status in database
+async function updateOrderStatus(merchantOrderId, status, paymentStatus) {
+    try {
+        const response = await fetch(
+            `https://ajay.yunicare.in/api/order/orders/${merchantOrderId}/status`, 
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status, paymentStatus })
+            }
+        );
+        if (!response.ok) {
+            console.error(`API request failed with status: ${response.status}`);
+            return null; // Return null to indicate failure
+        }
+        return await response.json(); // Return response data
+    } catch (error) {
+        return null; // Return null if an error occurs
     }
 }
