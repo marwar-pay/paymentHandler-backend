@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import axios from "axios";
 
-const CASHFREE_API_URL = "https://sandbox.cashfree.com/pg/orders";
+const CASHFREE_API_URL = "https://api.cashfree.com/pg/orders";
 
 export const createCashfreeOrder = asyncHandler(async (req, res) => {
     try {
