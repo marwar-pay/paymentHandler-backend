@@ -19,7 +19,8 @@ export const createCashfreeOrder = asyncHandler(async (req, res) => {
                 "customer_phone": customerPhone
             },
             "order_meta": {
-                "return_url": returnUrl
+                "return_url": returnUrl,
+                "notify_url": "https://1923-223-184-46-223.ngrok-free.app/api/cashfree/verify"
             }
         };
 
@@ -39,3 +40,39 @@ export const createCashfreeOrder = asyncHandler(async (req, res) => {
         });
     }
 });
+
+export const verifyCashfreeOrder = asyncHandler(async (req, res) => {
+    try {
+        const { order, payment, event_time } = req.body.data;
+        console.log(" cashfree.controller.js:47 ~ verifyCashfreeOrder ~ req.body:", req.body);
+        const order_id = order.order_id;
+        const bank_reference = payment.bank_reference;
+        const payment_status = payment.payment_status;
+        await updateOrderStatus(order_id, payment_status === "SUCCESS" ? "processing" : "cancelled", payment_status)
+    } catch (error) {
+        console.log(" cashfree.controller.js:48 ~ verifyCashfreeOrder ~ error:", error);
+
+
+    }
+})
+
+async function updateOrderStatus(merchantOrderId, status, paymentStatus) {
+    try {
+        const response = await fetch(`https://ajay.yunicare.in/api/order/orders/${merchantOrderId}/status`, {
+            method: 'PUT',
+
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status, paymentStatus })
+        });
+        if (!response.ok) {
+            throw new Error(`API request failed with status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data; // Returning data in case it's needed
+    } catch (error) {
+        console.error('Error updating order status:', error);
+    }
+}
