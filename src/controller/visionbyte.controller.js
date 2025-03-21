@@ -94,7 +94,8 @@ export const phonePeVisionbyte = asyncHandler(async (req, res) => {
             { headers }
         );
         if (response.status === 200) {
-            startOrderStatusCron(merchantOrderId);
+            let intent = false
+            startOrderStatusCron(merchantOrderId, intent);
         }
         res.status(response.status).json(response.data);
     } catch (error) {
@@ -105,7 +106,54 @@ export const phonePeVisionbyte = asyncHandler(async (req, res) => {
     }
 });
 
-async function startOrderStatusCron(orderId) {
+export const phonePeIntent = asyncHandler(async (req, res) => {
+    try {
+        const { merchantOrderId, amount } = req.body;
+
+        if (!merchantOrderId || !amount) {
+            return res.status(400).json({ message: "Missing required parameters" });
+        }
+
+        const accessToken = await getValidToken();
+
+        const paymentRequest = {
+            merchantOrderId,
+            "amount": Number(amount),
+            "expireAfter": 600,
+            "deviceContext": {
+                "deviceOS": "ANDROID"
+            },
+            "paymentFlow": {
+                "type": "PG",
+                "paymentMode": {
+                    "type": "UPI_INTENT"
+                }
+            }
+        }
+        const headers = {
+            "Content-Type": "application/json",
+            Authorization: `O-Bearer ${accessToken}`,
+        };
+
+        const response = await axios.post(
+            "https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/pay",
+            paymentRequest,
+            { headers }
+        );
+        if (response.status === 200) {
+            let intent = true
+            startOrderStatusCron(merchantOrderId, intent);
+        }
+        res.status(response.status).json(response.data);
+    } catch (error) {
+        res.status(error.response?.status || 500).json({
+            message: "Payment processing failed",
+            error: error.response?.data || error.message,
+        });
+    }
+});
+
+async function startOrderStatusCron(orderId, intent) {
     if (jobs[orderId]) {
         jobs[orderId].stop();
         delete jobs[orderId];
@@ -120,8 +168,7 @@ async function startOrderStatusCron(orderId) {
                 return;
             }
             const accessToken = await getValidToken();
-            const phonepeResponse = await axios.get(
-                `https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/${orderId}/status`,
+            const phonepeResponse = await axios.get(intent ? `https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/order/${orderId}/status?details=false` : `https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/${orderId}/status`,
                 {
                     headers: {
                         "Content-Type": "application/json",
