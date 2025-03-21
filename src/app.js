@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import phonePe from "./routes/payment.routes.js";
 import phonepeUat from "./routes/phonepeUAT.routes.js"
 import cashFree from "./routes/cashfree.routes.js"
+import visionbyte from "./routes/visionbyte.routes.js"
 import { ApiError } from "./utils/ApiError.js";
 
 const app = express();
@@ -25,6 +26,7 @@ app.use(express.static("public"));
 
 app.use("/payment", phonePe);
 app.use("/api/uat", phonepeUat);
+app.use("/api/visionbyte",visionbyte);
 app.use("/api", cashFree)
 
 // Catch-all for undefined routes
