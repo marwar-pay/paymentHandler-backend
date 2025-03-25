@@ -209,8 +209,8 @@ function generateAuthorizationHash(username, password) {
 }
 
 export const phonePeCallback = asyncHandler(async (req, res) => {
-    const username = 'swiftvita';
-    const password = 'swiftvita123';
+    const username = 'testuser';
+    const password = 'testpassword123';
 
     const receivedAuthorization = req.headers['authorization'];
     const expectedAuthorization = generateAuthorizationHash(username, password);
