@@ -66,20 +66,19 @@ export const phonePeVisionbyte = asyncHandler(async (req, res) => {
             paymentFlow: {
                 type: "PG_CHECKOUT",
                 message: "Payment message used for collect requests",
-                merchantUrls: { redirectUrl },
-                metaInfo: {},
-                paymentModeConfig: {
-                    enabledPaymentModes: [
-                        { type: "UPI_INTENT" },
-                        { type: "UPI_COLLECT" },
-                        { type: "UPI_QR" },
-                        { type: "NET_BANKING" },
-                        {
-                            type: "CARD",
-                            cardTypes: ["DEBIT_CARD", "CREDIT_CARD"],
-                        },
-                    ],
-                },
+                merchantUrls: { redirectUrl }
+                // paymentModeConfig: {
+                //     enabledPaymentModes: [
+                //         { type: "UPI_INTENT" },
+                //         { type: "UPI_COLLECT" },
+                //         { type: "UPI_QR" },
+                //         { type: "NET_BANKING" },
+                //         {
+                //             type: "CARD",
+                //             cardTypes: ["DEBIT_CARD", "CREDIT_CARD"],
+                //         },
+                //     ],
+                // },
             },
         };
 
@@ -130,6 +129,30 @@ export const phonePeIntent = asyncHandler(async (req, res) => {
                 }
             }
         }
+
+        // const paymentRequest ={
+        //     "merchantOrderId": "TX123456",
+        //     "amount": 1000,
+        //     "expireAfter": 1200,
+        //    "metaInfo": {
+        //         "udf1": "<additional-information-1>",
+        //         "udf2": "<additional-information-2>",
+        //         "udf3": "<additional-information-3>",
+        //         "udf4": "<additional-information-4>",
+        //         "udf5": "<additional-information-5>"
+        //     },    
+        //     "deviceContext": {
+        //         "deviceOS": "ANDROID",
+        //         "merchantCallBackScheme": ""
+        //     },
+        //     "paymentFlow": {
+        //         "type": "PG",    
+        //         "paymentMode" : {                           
+        //             "type" : "UPI_INTENT",
+        //             "targetApp" : "com.phonepe.app" // Package name for UPI app selected by the user in Android
+        //         }  
+        //     } 
+        // }
         const headers = {
             "Content-Type": "application/json",
             Authorization: `O-Bearer ${accessToken}`,

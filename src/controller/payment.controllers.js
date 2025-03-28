@@ -67,7 +67,6 @@ export const phonePeSwiftVita = asyncHandler(async (req, res) => {
                 type: "PG_CHECKOUT",
                 message: "Payment message used for collect requests",
                 merchantUrls: { redirectUrl },
-                metaInfo: {},
                 paymentModeConfig: {
                     enabledPaymentModes: [
                         { type: "UPI_INTENT" },
