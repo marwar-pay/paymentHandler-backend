@@ -9,14 +9,10 @@ import cron from "node-cron";
 // const client_secret = '66e46ce1-0fdd-43d7-b958-a02f65425602';
 // const client_version = 1;
 
-const url = "https://api.phonepe.com/apis/identity-manager/v1/oauth/token";
-const client_id = 'SU2504021007399578949867';
-const client_secret = '3f1f29b6-0969-4010-9565-9d3b1be47ee1';
+const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
+const client_id = 'VISIONBYTEUAT_2503131723048897947926';
+const client_secret = 'MmE5OTQ1NjItMjIzMy00N2NmLTlmNTQtYjI2ZjJlYTVkODA2';
 const client_version = 1;
-// const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
-// const client_id = 'VISIONBYTEUAT_2503131723048897947926';
-// const client_secret = 'MmE5OTQ1NjItMjIzMy00N2NmLTlmNTQtYjI2ZjJlYTVkODA2';
-// const client_version = 1;
 
 let tokenData = null;
 const jobs = {};
@@ -92,8 +88,7 @@ export const phonePeVisionbyte = asyncHandler(async (req, res) => {
         };
 
         const response = await axios.post(
-            "https://api.phonepe.com/apis/identity-manager/checkout/v2/pay",
-            // "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
+            "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
             paymentRequest,
             { headers }
         );
@@ -164,7 +159,7 @@ export const phonePeIntent = asyncHandler(async (req, res) => {
         };
 
         const response = await axios.post(
-            "https://api.phonepe.com/apis/pg/payments/v2/pay",
+            "https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/pay",
             paymentRequest,
             { headers }
         );
@@ -196,7 +191,7 @@ async function startOrderStatusCron(orderId, intent) {
                 return;
             }
             const accessToken = await getValidToken();
-            const phonepeResponse = await axios.get(intent ? `https://api.phonepe.com/apis/identity-manager/payments/v2/order/${orderId}/status?details=false` : `https://api.phonepe.com/apis/identity-manager/checkout/v2/order/${orderId}/status`,
+            const phonepeResponse = await axios.get(intent ? `https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/order/${orderId}/status?details=false` : `https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/${orderId}/status`,
                 {
                     headers: {
                         "Content-Type": "application/json",

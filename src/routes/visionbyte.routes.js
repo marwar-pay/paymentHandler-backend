@@ -2,6 +2,7 @@ import express from "express";
 const router = express.Router();
 import { celebrate, Joi } from "celebrate";
 import { phonePeVisionbyte, phonePeCallback, phonePeIntent } from "../controller/visionbyte.controller.js";
+import { phonePeCallback as testPhonePeCallback, phonePeIntent as testPhonePeIntent } from "../controller/visionByte.controller.test.js";
 
 router.post("/phonePeInitiate", celebrate({
     body: Joi.object({
@@ -19,5 +20,14 @@ router.post("/phonePeIntent", celebrate({
 }), phonePeIntent);
 
 router.post("/phonepeCallback", phonePeCallback)
+
+router.post("/test-phonePeIntent", celebrate({
+    body: Joi.object({
+        merchantOrderId: Joi.string().required(),
+        amount: Joi.number().required(),
+    })
+}), testPhonePeCallback);
+
+router.post("/test-phonepeCallback", testPhonePeIntent)
 
 export default router;
