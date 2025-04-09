@@ -92,7 +92,7 @@ export const phonePeVisionbyte = asyncHandler(async (req, res) => {
         };
 
         const response = await axios.post(
-            "https://api.phonepe.com/apis/identity-manager/checkout/v2/pay",
+            "https://api.phonepe.com/apis/pg/checkout/v2/pay",
             // "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
             paymentRequest,
             { headers }
