@@ -7,6 +7,8 @@ import cashFree from "./routes/cashfree.routes.js"
 import visionbyte from "./routes/visionbyte.routes.js"
 import vibecartRoute from './routes/vibecart.routes.js'
 import { ApiError } from "./utils/ApiError.js";
+import esrgmgRoute from "./routes/esrgmg.routes.js";
+import impactPeakRoute from "./routes/impactPeak.routes.js";
 
 const app = express();
 
@@ -27,9 +29,11 @@ app.use(express.static("public"));
 
 app.use("/payment", phonePe);
 app.use("/api/uat", phonepeUat);
-app.use("/api/visionbyte",visionbyte);
+app.use("/api/visionbyte", visionbyte);
 app.use("/api", cashFree);
 app.use("/api/vibecart", vibecartRoute);
+app.use("/api/esrgmg", esrgmgRoute);
+app.use("/api/impactPeak", impactPeakRoute);
 
 // Catch-all for undefined routes
 app.get("/", (req, res, next) => {

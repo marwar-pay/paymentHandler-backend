@@ -1,18 +1,21 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import axios from "axios";
-import { ApiResponse } from "../utils/ApiResponse.js"
 import crypto from 'crypto';
 import cron from "node-cron";
 
-const url = "https://api.phonepe.com/apis/identity-manager/v1/oauth/token";
-const client_id = 'SU2504101320348760092764';
-const client_secret = '619302d9-e5b0-41b6-b528-519368e71610';
-const client_version = 1;
-
-// const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
-// const client_id = 'VISIONBYTEUAT_2503131723048897947926';
-// const client_secret = 'MmE5OTQ1NjItMjIzMy00N2NmLTlmNTQtYjI2ZjJlYTVkODA2';
+// const url = "https://api.phonepe.com/apis/identity-manager/v1/oauth/token";
+// const client_id = 'SU2502191439075663427094';
+// const client_secret = '66e46ce1-0fdd-43d7-b958-a02f65425602';
 // const client_version = 1;
+
+// const url = "https://api.phonepe.com/apis/identity-manager/v1/oauth/token";
+// const client_id = 'SU2504152334336839484631';
+// const client_secret = '3b24519d-be38-47ac-addc-2d8b279294c2';
+// const client_version = 1;
+const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
+const client_id = 'TEST-M22F8IEOYYYV4_25041';
+const client_secret = 'ZjQ3ZWFkOWUtNWE3MS00ZWQxLWI4ZmUtZWI3NzY4NTcyODA2';
+const client_version = 1;
 
 let tokenData = null;
 const jobs = {};
@@ -50,7 +53,7 @@ async function getValidToken() {
     return tokenData.access_token;
 }
 
-export const phonePeVibecart = asyncHandler(async (req, res) => {
+export const phonePeQR = asyncHandler(async (req, res) => {
     try {
         const { merchantOrderId, amount, redirectUrl } = req.body;
 
@@ -66,19 +69,19 @@ export const phonePeVibecart = asyncHandler(async (req, res) => {
             paymentFlow: {
                 type: "PG_CHECKOUT",
                 message: "Payment message used for collect requests",
-                merchantUrls: { redirectUrl }
-                // paymentModeConfig: {
-                //     enabledPaymentModes: [
-                //         { type: "UPI_INTENT" },
-                //         { type: "UPI_COLLECT" },
-                //         { type: "UPI_QR" },
-                //         { type: "NET_BANKING" },
-                //         {
-                //             type: "CARD",
-                //             cardTypes: ["DEBIT_CARD", "CREDIT_CARD"],
-                //         },
-                //     ],
-                // },
+                merchantUrls: { redirectUrl },
+                paymentModeConfig: {
+                    enabledPaymentModes: [
+                        // { type: "UPI_INTENT" },
+                        // { type: "UPI_COLLECT" },
+                        { type: "UPI_QR" },
+                        // { type: "NET_BANKING" },
+                        // {
+                        //     type: "CARD",
+                        //     cardTypes: ["DEBIT_CARD", "CREDIT_CARD"],
+                        // },
+                    ],
+                },
             },
         };
 
@@ -88,8 +91,8 @@ export const phonePeVibecart = asyncHandler(async (req, res) => {
         };
 
         const response = await axios.post(
-            // "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
-            "https://api.phonepe.com/apis/pg/checkout/v2/pay",
+            // "https://api.phonepe.com/apis/pg/checkout/v2/pay",
+            "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
             paymentRequest,
             { headers }
         );
@@ -160,7 +163,7 @@ export const phonePeIntent = asyncHandler(async (req, res) => {
         };
 
         const response = await axios.post(
-            "https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/pay",
+            "https://api.phonepe.com/apis/pg/payments/v2/pay",
             paymentRequest,
             { headers }
         );
@@ -192,7 +195,7 @@ async function startOrderStatusCron(orderId, intent) {
                 return;
             }
             const accessToken = await getValidToken();
-            const phonepeResponse = await axios.get(intent ? `https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/order/${orderId}/status?details=false` : `https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/${orderId}/status`,
+            const phonepeResponse = await axios.get(intent ? `https://api.phonepe.com/apis/identity-manager/payments/v2/order/${orderId}/status?details=false` : `https://api.phonepe.com/apis/identity-manager/checkout/v2/order/${orderId}/status`,
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -233,8 +236,8 @@ function generateAuthorizationHash(username, password) {
 }
 
 export const phonePeCallback = asyncHandler(async (req, res) => {
-    const username = 'testuser';
-    const password = 'testpassword123';
+    const username = 'esrgmg';
+    const password = 'esrgmg123';
 
     const receivedAuthorization = req.headers['authorization'];
     const expectedAuthorization = generateAuthorizationHash(username, password);
