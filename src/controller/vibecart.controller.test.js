@@ -61,7 +61,7 @@ export const phonePeVibecart = asyncHandler(async (req, res) => {
         const accessToken = await getValidToken();
         const paymentRequest = {
             merchantOrderId,
-            amount: Math.round(amount) * 100,
+            amount: Math.round(amount),
             expireAfter: 600,
             paymentFlow: {
                 type: "PG_CHECKOUT",

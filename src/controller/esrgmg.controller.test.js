@@ -64,7 +64,7 @@ export const phonePeQR = asyncHandler(async (req, res) => {
         const accessToken = await getValidToken();
         const paymentRequest = {
             merchantOrderId,
-            amount: Math.round(amount) * 100,
+            amount: Math.round(amount),
             expireAfter: 600,
             paymentFlow: {
                 type: "PG_CHECKOUT",
@@ -121,7 +121,7 @@ export const phonePeIntent = asyncHandler(async (req, res) => {
 
         const paymentRequest = {
             merchantOrderId,
-            "amount": Math.round(amount) * 100,
+            "amount": Math.round(amount),
             "expireAfter": 600,
             "deviceContext": {
                 "deviceOS": "ANDROID"
