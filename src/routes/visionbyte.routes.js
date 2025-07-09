@@ -3,6 +3,7 @@ const router = express.Router();
 import { celebrate, Joi } from "celebrate";
 import { phonePeVisionbyte, phonePeCallback, phonePeIntent } from "../controller/visionbyte.controller.js";
 import { phonePeCallback as testPhonePeCallback, phonePeIntent as testPhonePeIntent } from "../controller/visionByte.controller.test.js";
+import { VisionByte } from "../controller/payment.controllers.js";
 
 router.post("/phonePeInitiate", celebrate({
     body: Joi.object({
@@ -27,6 +28,15 @@ router.post("/test-phonePeIntent", celebrate({
         amount: Joi.number().required(),
     })
 }), testPhonePeCallback);
+
+
+router.post("/upiGateway", celebrate({
+    body: Joi.object({
+        merchantOrderId: Joi.string().required(),
+        amount: Joi.number().required(),
+        redirectUrl: Joi.string().uri().required(),
+    })
+}), VisionByte);
 
 router.post("/test-phonepeCallback", testPhonePeIntent)
 

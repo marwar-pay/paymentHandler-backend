@@ -339,6 +339,40 @@ export const VibeVisionPayment = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, json))
 })
 
+export const VisionByte = asyncHandler(async (req, res) => {
+    let { trxId, amount, redirectUrl } = req.body;
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+        "key": "e28b09da-21b9-4edc-8271-5f0282eba4bf",
+        "client_txn_id": trxId,
+        "amount": amount,
+        "p_info": "Product Name",
+        "customer_name": "Jon Doe",
+        "customer_email": "jondoe@gmail.com",
+        "customer_mobile": "9876543210",
+        "redirect_url": redirectUrl,
+        "udf1": "user defined field 1",
+        "udf2": "user defined field 2",
+        "udf3": "user defined field 3"
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+    };
+
+    let dd = await fetch("https://api.ekqr.in/api/create_order", requestOptions)
+    // .then(response => response.json())
+    // .then((result) => RespObj = result)
+    // .catch(error => console.log('error', error));
+    let json = await dd.json();
+    res.status(200).json(new ApiResponse(200, json))
+})
+
 export const PluseSyncGeneratePayment = asyncHandler(async (req, res) => {
     let { trxId, amount, redirectUrl } = req.body;
     var myHeaders = new Headers();
